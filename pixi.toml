@@ -1,0 +1,23 @@
+[workspace]
+name = "scBrailleR"
+channels = ["conda-forge", "bioconda"]
+platforms = ["linux-64"]
+
+[dependencies]
+r-base = "4.4.*"
+r-seurat = "*"
+r-testthat = "*"
+r-devtools = "*"
+r-patchwork = "*"
+bioconductor-singlecellexperiment = "*"
+bioconductor-scater = "*"
+bioconductor-scuttle = "*"
+r-remotes = ">=2.5.0,<3"
+r-xml = ">=3.99_0.25,<4"
+r-gridsvg = ">=1.7_7,<2"
+
+[tasks]
+# BrailleR is not on conda, and CRAN has no build for this R; install from GitHub.
+setup = "Rscript -e 'if (!requireNamespace(\"BrailleR\", quietly=TRUE)) remotes::install_github(\"ajrgodfrey/BrailleR\", upgrade=\"never\", repos=\"https://cloud.r-project.org\")'"
+test = { cmd = "Rscript -e 'devtools::test()'", depends-on = ["setup"] }
+document = "Rscript -e 'devtools::document()'"
