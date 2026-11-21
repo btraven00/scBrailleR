@@ -96,6 +96,9 @@ BrailleR::VI(BR_ElbowPlot(sce))
 BrailleR::VI(BR_DimPlot(sce))          # first reducedDim, coloured by label
 ```
 
+Vignettes: `vignette("seurat", package = "scBrailleR")` and
+`vignette("singlecellexperiment", package = "scBrailleR")`.
+
 See `?BR_ElbowPlot` and `?BR_DimPlot` for full argument lists and runnable
 examples.
 

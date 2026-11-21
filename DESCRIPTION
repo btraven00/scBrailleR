@@ -22,7 +22,11 @@ Suggests:
     scater,
     scuttle,
     ggplot2,
+    Rtsne,
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0

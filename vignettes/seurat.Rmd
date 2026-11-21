@@ -1,0 +1,94 @@
+---
+title: "Describing Seurat plots"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Describing Seurat plots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 5, fig.height = 4)
+```
+
+scBrailleR wraps common single-cell plots so that `BrailleR::VI()` can
+describe them in text, for screen readers and braille displays. Each
+`BR_*()` function returns the usual ggplot unchanged, so you can still
+draw it, with the facts needed for a description attached.
+
+This vignette uses `pbmc_small`, the 80-cell example dataset in
+SeuratObject. It already has PCA, t-SNE and clusters.
+
+```{r setup, message = FALSE}
+library(scBrailleR)
+library(Seurat)
+data("pbmc_small", package = "SeuratObject")
+```
+
+## How many PCs? `BR_ElbowPlot()`
+
+```{r elbow}
+p <- BR_ElbowPlot(pbmc_small, ndims = 15)
+BrailleR::VI(p)
+```
+
+The elbow is the PC furthest from the straight line joining the first
+and last points. `Describe = TRUE` adds where 50%, 75% and 90% of the
+variance is reached, and a per-PC table:
+
+```{r elbow-long}
+BrailleR::VI(p, Describe = TRUE)
+```
+
+## Clusters on an embedding: `BR_DimPlot()`
+
+```{r dimplot}
+q <- BR_DimPlot(pbmc_small, reduction = "tsne")
+BrailleR::VI(q)
+```
+
+The output reads in three parts:
+
+- **Per group**: size, centre (the median of each axis) and spread
+  (the median absolute deviation of each axis).
+- **Isolation**: the distance to the nearest other group's centre,
+  divided by the group's own spread. A value well above 1 means a
+  separate island; below 1 means it overlaps a neighbour.
+- **Two grids** of the plot cut into 4 by 4 squares, with the top row
+  being the top of the plot. The density grid counts cells per square.
+  The modal grid gives the group most common in each square, which is a
+  map of who sits where.
+
+`Describe = TRUE` adds a density grid for each group, on the same
+squares, so you can trace one group's shape:
+
+```{r dimplot-long}
+BrailleR::VI(q, Describe = TRUE)
+```
+
+Colour by any metadata column instead of the active identity:
+
+```{r dimplot-groups}
+BrailleR::VI(BR_DimPlot(pbmc_small, reduction = "tsne", group.by = "groups"))
+```
+
+## Where is a gene expressed? `BR_FeaturePlot()`
+
+```{r featureplot}
+f <- BR_FeaturePlot(pbmc_small, c("CD3E", "LYZ"), reduction = "tsne")
+BrailleR::VI(f)
+```
+
+For each gene you get how many cells express it, the square with the
+highest mean expression and which group is most common there, and the
+three groups with the highest mean. The mean-expression grid uses the
+same squares as the `BR_DimPlot()` grids, so the two outputs can be
+read side by side. `Describe = TRUE` lists every group.
+
+## The plots themselves
+
+The objects are still ordinary plots:
+
+```{r draw, fig.alt = "t-SNE scatter of 80 cells coloured by cluster; see the BR_DimPlot text description above."}
+q
+```

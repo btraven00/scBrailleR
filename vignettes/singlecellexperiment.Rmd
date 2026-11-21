@@ -1,0 +1,74 @@
+---
+title: "Describing SingleCellExperiment plots"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Describing SingleCellExperiment plots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 5, fig.height = 4)
+```
+
+The `BR_*()` functions accept a `SingleCellExperiment` as well as a
+Seurat object, and give the same text. The plots are drawn with scater
+instead of Seurat. The differences to know:
+
+- Groups come from `colLabels()` (the `label` column of `colData`)
+  unless you pass `group.by`. Seurat's equivalent is the active identity.
+- `BR_ElbowPlot()` needs the `varExplained` attribute that
+  `scater::runPCA()` stores on the PCA.
+- `BR_FeaturePlot()` describes the `logcounts` assay by default
+  (`layer = "counts"` to change it).
+
+## A small dataset
+
+We build an SCE from the counts of `pbmc_small` and run a standard
+scater workflow. As labels we reuse the clusters that came with the
+data.
+
+```{r setup, message = FALSE}
+library(scBrailleR)
+library(scater)
+data("pbmc_small", package = "SeuratObject")
+
+sce <- SingleCellExperiment(
+  assays = list(counts = SeuratObject::LayerData(pbmc_small, layer = "counts"))
+)
+sce <- logNormCounts(sce)
+set.seed(1)
+sce <- runPCA(sce, ncomponents = 15)
+sce <- runTSNE(sce, dimred = "PCA", perplexity = 10)
+colLabels(sce) <- pbmc_small$RNA_snn_res.1
+sce
+```
+
+## Elbow, clusters, genes
+
+```{r elbow}
+BrailleR::VI(BR_ElbowPlot(sce))
+```
+
+```{r dimplot}
+BrailleR::VI(BR_DimPlot(sce, reduction = "TSNE"))
+```
+
+```{r featureplot}
+BrailleR::VI(BR_FeaturePlot(sce, c("CD3E", "LYZ"), reduction = "TSNE"))
+```
+
+See `vignette("seurat", package = "scBrailleR")` for how to read each
+part of the output; the meaning is identical.
+
+## Without labels
+
+If the SCE has no `label` column, `BR_FeaturePlot()` still describes
+where each gene is expressed but cannot say which group that is, and
+`BR_DimPlot()` asks for `group.by`:
+
+```{r nolabels, error = TRUE}
+sce$label <- NULL
+BrailleR::VI(BR_FeaturePlot(sce, "LYZ", reduction = "TSNE"))
+BR_DimPlot(sce)
+```
