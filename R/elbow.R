@@ -4,17 +4,21 @@
 ### (y-axis) vs PC index (x-axis). The sighted-user task is "where does
 ### the curve flatten?" — we answer it numerically.
 
-#' Accessible Seurat ElbowPlot
+#' Accessible ElbowPlot for Seurat or SingleCellExperiment
 #'
-#' Wraps [Seurat::ElbowPlot()] and attaches the per-PC standard
+#' Wraps [Seurat::ElbowPlot()] (Seurat), or draws the equivalent ggplot
+#' from the `varExplained` attribute that [scater::runPCA()] leaves on
+#' the PCA reducedDim (SingleCellExperiment), and attaches the per-PC standard
 #' deviations and a detected elbow index so that [BrailleR::VI()]
 #' can describe the plot in words.
 #'
-#' @param object A Seurat object that has had `RunPCA()` called on it.
-#' @param ndims Number of PCs to plot (passed to Seurat).
-#' @param reduction Name of the reduction (default `"pca"`).
-#' @param ... Passed to [Seurat::ElbowPlot()].
-#' @return A ggplot object with extra class `"seurat_elbowplot"` and
+#' @param object A Seurat object after `RunPCA()`, or a
+#'   SingleCellExperiment after [scater::runPCA()].
+#' @param ndims Number of PCs to plot.
+#' @param reduction Name of the reduction (default `"pca"` for Seurat,
+#'   `"PCA"` for SCE).
+#' @param ... Passed to [Seurat::ElbowPlot()]; ignored for SCE.
+#' @return A ggplot object with extra class `"sc_elbowplot"` and
 #'   attributes used by `Augment`/`VI`.
 #' @examples
 #' \donttest{
@@ -31,15 +35,39 @@
 #' }
 #' }
 #' @export
-BR_ElbowPlot <- function(object, ndims = 20, reduction = "pca", ...) {
-  if (!requireNamespace("Seurat", quietly = TRUE)) {
-    stop("Seurat is required for BR_ElbowPlot()")
+BR_ElbowPlot <- function(object, ndims = 20, reduction = NULL, ...) {
+  if (inherits(object, "SingleCellExperiment")) {
+    if (!requireNamespace("ggplot2", quietly = TRUE)) {
+      stop("ggplot2 is required for BR_ElbowPlot() on a SingleCellExperiment")
+    }
+    reduction <- reduction %||% "PCA"
+    pcs <- SingleCellExperiment::reducedDim(object, reduction)
+    # scater::runPCA / scran::fixedPCA store per-PC variance here.
+    ve <- attr(pcs, "varExplained")
+    if (is.null(ve)) stop(sprintf(
+      "reducedDim '%s' has no 'varExplained' attribute; run scater::runPCA()",
+      reduction))
+    ndims <- min(ndims, length(ve))
+    sdev <- sqrt(ve[seq_len(ndims)])
+    # ponytail: mimics Seurat::ElbowPlot; scater has no elbow plot.
+    p <- ggplot2::ggplot(data.frame(dims = seq_len(ndims), stdev = sdev),
+                         ggplot2::aes(dims, stdev)) +
+      ggplot2::geom_point() +
+      ggplot2::labs(x = reduction, y = "Standard Deviation")
+  } else if (inherits(object, "Seurat")) {
+    if (!requireNamespace("Seurat", quietly = TRUE)) {
+      stop("Seurat is required for BR_ElbowPlot()")
+    }
+    reduction <- reduction %||% "pca"
+    p <- Seurat::ElbowPlot(object, ndims = ndims, reduction = reduction, ...)
+    sdev <- Seurat::Stdev(object, reduction = reduction)[seq_len(ndims)]
+  } else {
+    stop("BR_ElbowPlot() supports Seurat and SingleCellExperiment objects, not ",
+         class(object)[1])
   }
-  p <- Seurat::ElbowPlot(object, ndims = ndims, reduction = reduction, ...)
-  sdev <- Seurat::Stdev(object, reduction = reduction)[seq_len(ndims)]
   attr(p, "sdev")      <- sdev
   attr(p, "reduction") <- reduction
-  class(p) <- c("seurat_elbowplot", class(p))
+  class(p) <- c("sc_elbowplot", class(p))
   p
 }
 
@@ -60,8 +88,8 @@ BR_ElbowPlot <- function(object, ndims = 20, reduction = "pca", ...) {
   which.max(dists)
 }
 
-#' @exportS3Method BrailleR::Augment seurat_elbowplot
-Augment.seurat_elbowplot <- function(x) {
+#' @exportS3Method BrailleR::Augment sc_elbowplot
+Augment.sc_elbowplot <- function(x) {
   sdev  <- attr(x, "sdev")
   elbow <- .find_elbow(sdev)
   var <- sdev^2
@@ -86,7 +114,7 @@ Augment.seurat_elbowplot <- function(x) {
     if (length(other) && median(other) > 0) drops[elbow] / median(other) else NA_real_
   } else NA_real_
 
-  x$Seurat <- list(
+  x$sc <- list(
     reduction = attr(x, "reduction"),
     ndims     = length(sdev),
     sdev      = sdev,
@@ -103,10 +131,10 @@ Augment.seurat_elbowplot <- function(x) {
   BrailleR::Augment.ggplot(x)
 }
 
-#' @exportS3Method BrailleR::VI seurat_elbowplot
-VI.seurat_elbowplot <- function(x, Describe = FALSE, ...) {
+#' @exportS3Method BrailleR::VI sc_elbowplot
+VI.sc_elbowplot <- function(x, Describe = FALSE, ...) {
   x <- BrailleR::Augment(x)
-  S <- x$Seurat
+  S <- x$sc
 
   cat(sprintf(
     "Elbow plot of %d principal components from reduction %s.\n",

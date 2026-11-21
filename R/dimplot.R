@@ -11,23 +11,27 @@
 ### by which cluster. We answer both layers numerically, the second one
 ### using a BrailleR::WhereXY-style grid summary.
 
-#' Accessible Seurat DimPlot
+#' Accessible DimPlot for Seurat or SingleCellExperiment
 #'
-#' Wraps [Seurat::DimPlot()] and attaches a minimal facts list (per-
+#' Wraps [Seurat::DimPlot()] (Seurat) or [scater::plotReducedDim()]
+#' (SingleCellExperiment) and attaches a minimal facts list (per-
 #' cluster size, centroid, spread, plus the raw embedding and idents)
 #' so that [BrailleR::VI()] can describe the embedding in words.
 #'
 #' Note: the full Seurat object is *not* attached to the plot — only
 #' the two embedding columns and the identity factor are kept.
 #'
-#' @param object A Seurat object with at least one reduction computed.
-#' @param reduction Reduction name (default: Seurat's default reduction).
-#' @param group.by Metadata column to colour by; defaults to active idents.
+#' @param object A Seurat or SingleCellExperiment object with at least
+#'   one reduction computed.
+#' @param reduction Reduction name (default: Seurat's default reduction,
+#'   or the first `reducedDimNames()` entry for SCE).
+#' @param group.by Metadata / `colData` column to colour by; defaults to
+#'   active idents (Seurat) or `colLabels()` i.e. `"label"` (SCE).
 #' @param dims Which two dimensions of the reduction to plot (default
 #'   `c(1, 2)`).
-#' @param ... Passed to [Seurat::DimPlot()].
-#' @return A `ggplot` with extra class `"seurat_dimplot"` and the
-#'   attributes consumed by `Augment.seurat_dimplot()`.
+#' @param ... Passed to [Seurat::DimPlot()] or [scater::plotReducedDim()].
+#' @return A `ggplot` with extra class `"sc_dimplot"` and the
+#'   attributes consumed by `Augment.sc_dimplot()`.
 #' @examples
 #' \donttest{
 #' if (requireNamespace("SeuratObject", quietly = TRUE) &&
@@ -52,25 +56,46 @@ BR_DimPlot <- function(object,
                        group.by  = NULL,
                        dims      = c(1, 2),
                        ...) {
-  if (!requireNamespace("Seurat", quietly = TRUE)) {
-    stop("Seurat is required for BR_DimPlot()")
+  if (inherits(object, "SingleCellExperiment")) {
+    if (!requireNamespace("scater", quietly = TRUE)) {
+      stop("scater is required for BR_DimPlot() on a SingleCellExperiment")
+    }
+    reduction <- reduction %||% SingleCellExperiment::reducedDimNames(object)[1]
+    if (is.null(reduction)) stop("object has no reducedDims")
+    # SCE has no active idents; colLabels() ("label" column) is the convention.
+    group.by <- group.by %||% "label"
+    if (!group.by %in% colnames(SummarizedExperiment::colData(object))) {
+      stop(sprintf("colData has no column '%s'; set group.by", group.by))
+    }
+    p <- scater::plotReducedDim(object, dimred = reduction,
+                                ncomponents = dims, colour_by = group.by, ...)
+    emb <- SingleCellExperiment::reducedDim(object, reduction)[, dims, drop = FALSE]
+    ids <- SummarizedExperiment::colData(object)[[group.by]]
+  } else if (inherits(object, "Seurat")) {
+    if (!requireNamespace("Seurat", quietly = TRUE)) {
+      stop("Seurat is required for BR_DimPlot()")
+    }
+    reduction <- reduction %||% Seurat::DefaultDimReduc(object)
+    p <- Seurat::DimPlot(object,
+                         reduction = reduction,
+                         group.by  = group.by,
+                         dims      = dims,
+                         ...)
+    emb <- Seurat::Embeddings(object, reduction = reduction)[, dims, drop = FALSE]
+    ids <- if (is.null(group.by)) Seurat::Idents(object) else object[[group.by, drop = TRUE]]
+  } else {
+    stop("BR_DimPlot() supports Seurat and SingleCellExperiment objects, not ",
+         class(object)[1])
   }
-  reduction <- if (is.null(reduction)) Seurat::DefaultDimReduc(object) else reduction
-  p <- Seurat::DimPlot(object,
-                       reduction = reduction,
-                       group.by  = group.by,
-                       dims      = dims,
-                       ...)
-
-  emb <- Seurat::Embeddings(object, reduction = reduction)[, dims, drop = FALSE]
-  ids <- if (is.null(group.by)) Seurat::Idents(object) else object[[group.by, drop = TRUE]]
+  # scater's reducedDims often have no column names.
+  if (is.null(colnames(emb))) colnames(emb) <- paste0(reduction, "_", dims)
 
   attr(p, "embedding") <- emb
   attr(p, "idents")    <- as.factor(ids)
   attr(p, "reduction") <- reduction
   attr(p, "dims")      <- dims
   attr(p, "group_by")  <- group.by
-  class(p) <- c("seurat_dimplot", class(p))
+  class(p) <- c("sc_dimplot", class(p))
   p
 }
 
@@ -161,19 +186,19 @@ BR_DimPlot <- function(object,
   out
 }
 
-#' Augment a seurat_dimplot with the facts needed for description
+#' Augment a sc_dimplot with the facts needed for description
 #'
-#' Populates `x$Seurat` with per-cluster summaries and three grids:
+#' Populates `x$sc` with per-cluster summaries and three grids:
 #' an overall density grid (via [BrailleR::WhereXY]), a modal-cluster
 #' grid, and per-cluster density grids (only built for the `Describe`
 #' path of `VI()`).
 #'
-#' @param x A `seurat_dimplot`.
+#' @param x A `sc_dimplot`.
 #' @param grid Two-integer vector `c(nx, ny)` giving grid resolution.
-#' @return The input with class `Augmented` appended and `x$Seurat`
+#' @return The input with class `Augmented` appended and `x$sc`
 #'   populated.
-#' @exportS3Method BrailleR::Augment seurat_dimplot
-Augment.seurat_dimplot <- function(x, grid = c(4L, 4L)) {
+#' @exportS3Method BrailleR::Augment sc_dimplot
+Augment.sc_dimplot <- function(x, grid = c(4L, 4L)) {
   emb <- attr(x, "embedding")
   ids <- attr(x, "idents")
   per <- .cluster_facts(emb, ids)
@@ -182,7 +207,7 @@ Augment.seurat_dimplot <- function(x, grid = c(4L, 4L)) {
                                     grid = grid, addmargins = TRUE)
   modal_grid <- .modal_grid(emb, ids, grid = grid)
 
-  x$Seurat <- list(
+  x$sc <- list(
     reduction    = attr(x, "reduction"),
     dims         = attr(x, "dims"),
     group_by     = attr(x, "group_by"),
@@ -202,21 +227,21 @@ Augment.seurat_dimplot <- function(x, grid = c(4L, 4L)) {
   BrailleR::Augment.ggplot(x)
 }
 
-#' VI() method for seurat_dimplot
+#' VI() method for sc_dimplot
 #'
 #' Default output reports overall counts, per-cluster size/centroid/
 #' spread, pairwise isolation/closest-pair, the overall density grid,
 #' and the modal-cluster grid. `Describe = TRUE` additionally prints a
 #' per-cluster density grid for each cluster.
 #'
-#' @param x A `seurat_dimplot`.
+#' @param x A `sc_dimplot`.
 #' @param Describe If `TRUE`, also print per-cluster density grids.
 #' @param ... Ignored.
 #' @return Invisibly, the augmented plot.
-#' @exportS3Method BrailleR::VI seurat_dimplot
-VI.seurat_dimplot <- function(x, Describe = FALSE, ...) {
+#' @exportS3Method BrailleR::VI sc_dimplot
+VI.sc_dimplot <- function(x, Describe = FALSE, ...) {
   x <- BrailleR::Augment(x)
-  S <- x$Seurat
+  S <- x$sc
 
   group_lab <- if (is.null(S$group_by)) "active identity" else S$group_by
   cat(sprintf(

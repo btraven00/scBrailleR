@@ -2,28 +2,32 @@
 % Please edit documentation in R/dimplot.R
 \name{BR_DimPlot}
 \alias{BR_DimPlot}
-\title{Accessible Seurat DimPlot}
+\title{Accessible DimPlot for Seurat or SingleCellExperiment}
 \usage{
 BR_DimPlot(object, reduction = NULL, group.by = NULL, dims = c(1, 2), ...)
 }
 \arguments{
-\item{object}{A Seurat object with at least one reduction computed.}
+\item{object}{A Seurat or SingleCellExperiment object with at least
+one reduction computed.}
 
-\item{reduction}{Reduction name (default: Seurat's default reduction).}
+\item{reduction}{Reduction name (default: Seurat's default reduction,
+or the first \code{reducedDimNames()} entry for SCE).}
 
-\item{group.by}{Metadata column to colour by; defaults to active idents.}
+\item{group.by}{Metadata / \code{colData} column to colour by; defaults to
+active idents (Seurat) or \code{colLabels()} i.e. \code{"label"} (SCE).}
 
 \item{dims}{Which two dimensions of the reduction to plot (default
 \code{c(1, 2)}).}
 
-\item{...}{Passed to \code{\link[Seurat:DimPlot]{Seurat::DimPlot()}}.}
+\item{...}{Passed to \code{\link[Seurat:DimPlot]{Seurat::DimPlot()}} or \code{\link[scater:plotReducedDim]{scater::plotReducedDim()}}.}
 }
 \value{
-A \code{ggplot} with extra class \code{"seurat_dimplot"} and the
-attributes consumed by \code{Augment.seurat_dimplot()}.
+A \code{ggplot} with extra class \code{"sc_dimplot"} and the
+attributes consumed by \code{Augment.sc_dimplot()}.
 }
 \description{
-Wraps \code{\link[Seurat:DimPlot]{Seurat::DimPlot()}} and attaches a minimal facts list (per-
+Wraps \code{\link[Seurat:DimPlot]{Seurat::DimPlot()}} (Seurat) or \code{\link[scater:plotReducedDim]{scater::plotReducedDim()}}
+(SingleCellExperiment) and attaches a minimal facts list (per-
 cluster size, centroid, spread, plus the raw embedding and idents)
 so that \code{\link[BrailleR:VI]{BrailleR::VI()}} can describe the embedding in words.
 }

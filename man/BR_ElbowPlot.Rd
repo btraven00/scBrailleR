@@ -2,25 +2,29 @@
 % Please edit documentation in R/elbow.R
 \name{BR_ElbowPlot}
 \alias{BR_ElbowPlot}
-\title{Accessible Seurat ElbowPlot}
+\title{Accessible ElbowPlot for Seurat or SingleCellExperiment}
 \usage{
-BR_ElbowPlot(object, ndims = 20, reduction = "pca", ...)
+BR_ElbowPlot(object, ndims = 20, reduction = NULL, ...)
 }
 \arguments{
-\item{object}{A Seurat object that has had \code{RunPCA()} called on it.}
+\item{object}{A Seurat object after \code{RunPCA()}, or a
+SingleCellExperiment after \code{\link[scater:runPCA]{scater::runPCA()}}.}
 
-\item{ndims}{Number of PCs to plot (passed to Seurat).}
+\item{ndims}{Number of PCs to plot.}
 
-\item{reduction}{Name of the reduction (default \code{"pca"}).}
+\item{reduction}{Name of the reduction (default \code{"pca"} for Seurat,
+\code{"PCA"} for SCE).}
 
-\item{...}{Passed to \code{\link[Seurat:ElbowPlot]{Seurat::ElbowPlot()}}.}
+\item{...}{Passed to \code{\link[Seurat:ElbowPlot]{Seurat::ElbowPlot()}}; ignored for SCE.}
 }
 \value{
-A ggplot object with extra class \code{"seurat_elbowplot"} and
+A ggplot object with extra class \code{"sc_elbowplot"} and
 attributes used by \code{Augment}/\code{VI}.
 }
 \description{
-Wraps \code{\link[Seurat:ElbowPlot]{Seurat::ElbowPlot()}} and attaches the per-PC standard
+Wraps \code{\link[Seurat:ElbowPlot]{Seurat::ElbowPlot()}} (Seurat), or draws the equivalent ggplot
+from the \code{varExplained} attribute that \code{\link[scater:runPCA]{scater::runPCA()}} leaves on
+the PCA reducedDim (SingleCellExperiment), and attaches the per-PC standard
 deviations and a detected elbow index so that \code{\link[BrailleR:VI]{BrailleR::VI()}}
 can describe the plot in words.
 }

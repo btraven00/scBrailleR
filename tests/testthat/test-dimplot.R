@@ -93,7 +93,7 @@ test_that("BR_DimPlot attaches embedding + idents and dispatches VI", {
   data("pbmc_small", package = "SeuratObject")
   p <- BR_DimPlot(pbmc_small, reduction = "tsne")
 
-  expect_s3_class(p, "seurat_dimplot")
+  expect_s3_class(p, "sc_dimplot")
   expect_s3_class(p, "ggplot")
 
   emb <- attr(p, "embedding")
@@ -104,14 +104,14 @@ test_that("BR_DimPlot attaches embedding + idents and dispatches VI", {
   expect_identical(attr(p, "reduction"), "tsne")
 })
 
-test_that("Augment.seurat_dimplot populates Seurat facts and grids", {
+test_that("Augment.sc_dimplot populates Seurat facts and grids", {
   skip_if_not_installed("Seurat")
   skip_if_not_installed("SeuratObject")
   skip_if_not_installed("BrailleR")
 
   data("pbmc_small", package = "SeuratObject")
   a <- BrailleR::Augment(BR_DimPlot(pbmc_small, reduction = "tsne"))
-  S <- a$Seurat
+  S <- a$sc
 
   expect_true(all(c("n_cells", "n_clusters", "per_cluster",
                     "density_grid", "modal_grid",

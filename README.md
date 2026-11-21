@@ -49,7 +49,7 @@ If you want to iterate on the package without reinstalling each time:
 ```r
 # from the package root
 devtools::load_all(".")
-devtools::test()          # run testthat suite (39 + 46 tests today)
+devtools::test()          # run testthat suite
 devtools::document()      # regenerate man/*.Rd from roxygen comments
 ```
 
@@ -83,9 +83,28 @@ BrailleR::VI(q)                        # per-cluster facts + density and modal g
 BrailleR::VI(q, Describe = TRUE)       # adds per-cluster density grids
 ```
 
+The same functions accept a `SingleCellExperiment`. The DimPlot is drawn
+with `scater::plotReducedDim()` and coloured by `colLabels()` unless you
+set `group.by`. The ElbowPlot reads the `varExplained` attribute that
+`scater::runPCA()` stores:
+
+```r
+library(scater)
+sce <- runPCA(scuttle::logNormCounts(scuttle::mockSCE()))
+colLabels(sce) <- scran::clusterCells(sce, use.dimred = "PCA")
+BrailleR::VI(BR_ElbowPlot(sce))
+BrailleR::VI(BR_DimPlot(sce))          # first reducedDim, coloured by label
+```
+
 See `?BR_ElbowPlot` and `?BR_DimPlot` for full argument lists and runnable
 examples.
 
 ## License
 
 GPL-2, matching upstream BrailleR.
+
+## Dev environment
+
+`pixi run test` builds a conda env (R 4.4, Seurat, SingleCellExperiment,
+scater), installs BrailleR from GitHub and `GenomeInfoDbData` from
+Bioconductor, then runs the tests.

@@ -41,7 +41,7 @@ test_that("BR_ElbowPlot attaches sdev and reduction, and dispatches VI", {
   data("pbmc_small", package = "SeuratObject")
   p <- BR_ElbowPlot(pbmc_small, ndims = 10)
 
-  expect_s3_class(p, "seurat_elbowplot")
+  expect_s3_class(p, "sc_elbowplot")
   expect_s3_class(p, "ggplot")
   expect_length(attr(p, "sdev"), 10)
   expect_identical(attr(p, "reduction"), "pca")
@@ -75,24 +75,24 @@ test_that("Augment populates the Seurat fact list correctly", {
   p <- BR_ElbowPlot(pbmc_small, ndims = 8)
   a <- BrailleR::Augment(p)
 
-  expect_named(a$Seurat,
+  expect_named(a$sc,
                c("reduction", "ndims", "sdev", "drops", "var_pct",
                  "cum_pct", "elbow", "sharpness", "milestones",
                  "table", "var_explained_cum"),
                ignore.order = TRUE)
-  expect_equal(a$Seurat$ndims, 8)
-  expect_length(a$Seurat$sdev, 8)
-  expect_true(a$Seurat$elbow >= 1 && a$Seurat$elbow <= 8)
-  expect_true(a$Seurat$var_explained_cum > 0 &&
-              a$Seurat$var_explained_cum <= 1)
+  expect_equal(a$sc$ndims, 8)
+  expect_length(a$sc$sdev, 8)
+  expect_true(a$sc$elbow >= 1 && a$sc$elbow <= 8)
+  expect_true(a$sc$var_explained_cum > 0 &&
+              a$sc$var_explained_cum <= 1)
   # cumulative variance is monotone non-decreasing, ends at ~100%
-  expect_true(all(diff(a$Seurat$cum_pct) >= -1e-8))
-  expect_equal(unname(a$Seurat$cum_pct[8]), 100, tolerance = 1e-6)
+  expect_true(all(diff(a$sc$cum_pct) >= -1e-8))
+  expect_equal(unname(a$sc$cum_pct[8]), 100, tolerance = 1e-6)
   # table has expected columns
-  expect_named(a$Seurat$table,
+  expect_named(a$sc$table,
                c("PC", "sdev", "drop", "var_pct", "cum_pct"))
-  expect_equal(nrow(a$Seurat$table), 8)
-  expect_true(is.na(a$Seurat$table$drop[1]))
+  expect_equal(nrow(a$sc$table), 8)
+  expect_true(is.na(a$sc$table$drop[1]))
 })
 
 test_that("VI(Describe = TRUE) prints milestones and the per-PC table", {
@@ -142,7 +142,7 @@ test_that("ndims smaller than 3 still returns a usable plot with NA elbow", {
   data("pbmc_small", package = "SeuratObject")
   p <- BR_ElbowPlot(pbmc_small, ndims = 2)
   a <- BrailleR::Augment(p)
-  expect_true(is.na(a$Seurat$elbow))
+  expect_true(is.na(a$sc$elbow))
 
   out <- capture.output(BrailleR::VI(p))
   expect_true(any(grepl("Too few PCs", out)))

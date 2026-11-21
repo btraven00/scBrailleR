@@ -19,5 +19,7 @@ r-gridsvg = ">=1.7_7,<2"
 [tasks]
 # BrailleR is not on conda, and CRAN has no build for this R; install from GitHub.
 setup = "Rscript -e 'if (!requireNamespace(\"BrailleR\", quietly=TRUE)) remotes::install_github(\"ajrgodfrey/BrailleR\", upgrade=\"never\", repos=\"https://cloud.r-project.org\")'"
-test = { cmd = "Rscript -e 'devtools::test()'", depends-on = ["setup"] }
+# bioconda's GenomeInfoDbData relies on a post-link script pixi skips by default.
+setup-bioc = "Rscript -e 'if (!requireNamespace(\"GenomeInfoDbData\", quietly=TRUE)) install.packages(\"GenomeInfoDbData\", repos=\"https://bioconductor.org/packages/3.20/data/annotation\")'"
+test = { cmd = "Rscript -e 'devtools::test()'", depends-on = ["setup", "setup-bioc"] }
 document = "Rscript -e 'devtools::document()'"
