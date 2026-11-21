@@ -1,0 +1,23 @@
+Package: scBrailleR
+Title: Accessible Text Descriptions of Single-Cell Plots
+Version: 0.0.0.9000
+Authors@R:
+    person("Ben", family = "TODO", email = "ben.uzh@proton.me",
+           role = c("aut", "cre"))
+Description: Extends BrailleR with VI() and Augment() methods for plots
+    commonly produced in single-cell RNA-seq analysis, starting with
+    Seurat. Provides spoken/braille-friendly summaries that report
+    cluster-, gene-, and component-level facts rather than purely
+    visual properties.
+License: GPL-2
+Encoding: UTF-8
+Imports:
+    BrailleR
+Suggests:
+    Seurat,
+    SeuratObject,
+    patchwork,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
