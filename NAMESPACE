@@ -2,10 +2,13 @@
 
 S3method(BrailleR::Augment,sc_dimplot)
 S3method(BrailleR::Augment,sc_elbowplot)
+S3method(BrailleR::Augment,sc_featureplot)
 S3method(BrailleR::VI,sc_dimplot)
 S3method(BrailleR::VI,sc_elbowplot)
+S3method(BrailleR::VI,sc_featureplot)
 export(BR_DimPlot)
 export(BR_ElbowPlot)
+export(BR_FeaturePlot)
 importFrom(BrailleR,
   Augment,
   VI,
