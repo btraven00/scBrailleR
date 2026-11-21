@@ -27,7 +27,9 @@ Suggests:
     rmarkdown,
     picklerick,
     testthat (>= 3.0.0)
-Remotes: btraven00/scx/r/picklerick
+Remotes:
+    ajrgodfrey/BrailleR,
+    btraven00/scx/r/picklerick
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
