@@ -2,7 +2,7 @@ Package: scBrailleR
 Title: Accessible Text Descriptions of Single-Cell Plots
 Version: 0.0.0.9000
 Authors@R:
-    person("Ben", family = "TODO", email = "ben.uzh@proton.me",
+    person("Ben", family = "Carrillo", email = "ben.uzh@proton.me",
            role = c("aut", "cre"))
 Description: Extends BrailleR with VI() and Augment() methods for plots
     commonly produced in single-cell RNA-seq analysis, for Seurat and

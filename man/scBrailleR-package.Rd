@@ -12,11 +12,11 @@ provides accessible wrappers for \code{\link[Seurat:ElbowPlot]{Seurat::ElbowPlot
 \code{\link[Seurat:DimPlot]{Seurat::DimPlot()}}.
 }
 \author{
-\strong{Maintainer}: Ben TODO \email{ben.uzh@proton.me}
+\strong{Maintainer}: Ben Carrillo \email{ben.uzh@proton.me}
 
 Authors:
 \itemize{
-  \item Ben TODO \email{ben.uzh@proton.me}
+  \item Ben Carrillo \email{ben.uzh@proton.me}
 }
 
 }
