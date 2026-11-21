@@ -96,6 +96,19 @@ BrailleR::VI(BR_ElbowPlot(sce))
 BrailleR::VI(BR_DimPlot(sce))          # first reducedDim, coloured by label
 ```
 
+### Describing a dataset file without loading it
+
+`BR_Inspect()` uses [picklerick](https://github.com/btraven00/scx)'s
+`inspect()`, which reads only metadata, so it is fast on any size of
+`.h5ad`, Zarr, `.h5mu`, H5Seurat, 10x or BPCells file:
+
+```r
+BR_Inspect("pbmc3k.h5ad")
+#> H5AD file pbmc3k.h5ad: 2,700 cells by 32,738 genes.
+#> Main matrix: ... non-zero values (...% of entries). Non-zeros per row ...
+#> Cell metadata, 4 columns: ...
+```
+
 Vignettes: `vignette("seurat", package = "scBrailleR")` and
 `vignette("singlecellexperiment", package = "scBrailleR")`.
 

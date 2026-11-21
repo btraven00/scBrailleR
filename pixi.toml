@@ -21,5 +21,8 @@ r-gridsvg = ">=1.7_7,<2"
 setup = "Rscript -e 'if (!requireNamespace(\"BrailleR\", quietly=TRUE)) remotes::install_github(\"ajrgodfrey/BrailleR\", upgrade=\"never\", repos=\"https://cloud.r-project.org\")'"
 # bioconda's GenomeInfoDbData relies on a post-link script pixi skips by default.
 setup-bioc = "Rscript -e 'if (!requireNamespace(\"GenomeInfoDbData\", quietly=TRUE)) install.packages(\"GenomeInfoDbData\", repos=\"https://bioconductor.org/packages/3.20/data/annotation\")'"
+# Optional, for BR_Inspect(): picklerick from a local scx checkout. Separate
+# cargo target dir so it doesn't collide with scx's own (system-compiler) build.
+setup-picklerick = { cmd = "R CMD INSTALL ../scx/r/picklerick", env = { PICKLERICK_TARGET_DIR = "$PIXI_PROJECT_ROOT/.pixi/picklerick-target" } }
 test = { cmd = "Rscript -e 'devtools::test()'", depends-on = ["setup", "setup-bioc"] }
 document = "Rscript -e 'devtools::document()'"
