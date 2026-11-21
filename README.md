@@ -3,43 +3,25 @@
 Accessible text descriptions of single-cell analysis plots, extending
 [BrailleR](https://github.com/ajrgodfrey/BrailleR).
 
-Status: experimental. Currently supports Seurat `ElbowPlot` and `DimPlot`.
-`VlnPlot`, `DotPlot`, and `FeaturePlot` are planned.
+Status: experimental. Describes `ElbowPlot`, `DimPlot` and `FeaturePlot`
+for Seurat and SingleCellExperiment objects, and dataset files via
+picklerick. `VlnPlot` and `DotPlot` are planned.
 
 ## Install
 
-scBrailleR is not on CRAN yet. Install it from a local source checkout.
-
-### Requirements
-
-- R >= 4.0
-- [`BrailleR`](https://cran.r-project.org/package=BrailleR) (declared as
-  `Imports`; installed automatically if you use `remotes::install_local`)
-- For actually using the plot wrappers: `Seurat` and `SeuratObject`
-  (declared as `Suggests` — install them yourself)
-
-### One-liner from this checkout
-
 ```r
-# install.packages("remotes")    # if you don't have it
-remotes::install_local("~/phd/scBrailleR")
+# install.packages("pak")
+pak::pak(c("ajrgodfrey/BrailleR", "btraven00/scBrailleR"))
 ```
 
-`install_local` will pick up `BrailleR` for you. Install the optional
-single-cell stack separately:
+BrailleR is installed from GitHub because CRAN does not always have a
+build for current R. The object-specific parts are optional; install
+what you use:
 
 ```r
-install.packages(c("Seurat", "SeuratObject"))
-```
-
-### From a git clone elsewhere
-
-```sh
-git clone https://github.com/btraven00/scBrailleR
-```
-
-```r
-remotes::install_local("scBrailleR")
+pak::pak(c("Seurat", "SeuratObject"))                     # Seurat plots
+pak::pak(c("SingleCellExperiment", "scater", "scuttle"))  # SCE plots
+pak::pak("btraven00/scx/r/picklerick")                    # BR_Inspect(); needs Rust
 ```
 
 ### Developing locally
